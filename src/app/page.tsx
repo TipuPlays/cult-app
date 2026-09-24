@@ -2,73 +2,57 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main className="relative flex min-h-dvh flex-col overflow-hidden px-5 pb-10 pt-6 md:px-10">
-      <header className="animate-rise flex items-center justify-between">
-        <p className="font-display text-2xl tracking-[0.2em] text-bone md:text-3xl">
+    <main className="relative flex min-h-dvh flex-col overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(245,245,242,0.05)_0%,transparent_55%)]"
+      />
+      <div
+        aria-hidden
+        className="animate-breathe pointer-events-none absolute left-1/2 top-[20%] h-[38vw] max-h-[380px] w-[38vw] max-w-[380px] -translate-x-1/2 rounded-full border border-[var(--cult-line)]"
+      />
+
+      <header className="animate-rise relative z-10 flex items-center justify-between px-6 pt-7 md:px-12">
+        <p className="font-display text-3xl font-semibold tracking-[0.3em] text-white md:text-4xl">
           CULT
         </p>
-        <nav className="flex items-center gap-5 text-sm text-mist">
-          <Link href="/membership" className="hover:text-bone transition-colors">
-            Membership
+        <nav className="flex items-center gap-6 text-[0.65rem] uppercase tracking-[0.22em] text-warm-grey">
+          <Link href="/membership" className="transition hover:text-white">
+            Ranks
           </Link>
-          <Link
-            href="/login"
-            className="rounded-full border border-[var(--cult-line)] px-4 py-2 text-bone hover:border-matcha/50 transition-colors"
-          >
+          <Link href="/login" className="cult-btn cult-btn-ghost !px-4 !py-2">
             Enter
           </Link>
         </nav>
       </header>
 
-      <section className="relative z-10 mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end pb-8 pt-24 md:justify-center md:pb-16 md:pt-10">
-        <div
-          aria-hidden
-          className="animate-breathe pointer-events-none absolute -right-8 top-10 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(143,169,120,0.35)_0%,transparent_70%)] blur-2xl md:right-10 md:top-0 md:h-80 md:w-80"
-        />
-        <p className="animate-rise mb-4 text-xs uppercase tracking-[0.35em] text-copper">
-          Specialty coffee · matcha · belonging
-        </p>
-        <h1 className="animate-rise font-display text-[clamp(3.2rem,12vw,6.5rem)] leading-[0.92] tracking-tight text-bone">
-          Join the
-          <br />
-          quiet cult
-          <br />
-          of craft.
+      <section className="relative z-10 mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 pb-16 pt-24 text-center md:px-12">
+        <p className="cult-eyebrow animate-rise">Private coffee society</p>
+        <h1 className="animate-rise-delay font-display mt-10 text-[clamp(4rem,16vw,9rem)] font-medium leading-[0.85] tracking-[-0.03em] text-white">
+          CULT
         </h1>
-        <p className="animate-rise-delay mt-6 max-w-md text-base leading-relaxed text-mist md:text-lg">
-          Twelve levels. Living rituals. Credits you earn — never buy your way in.
+        <p className="animate-rise-delay mx-auto mt-10 max-w-md text-base font-light leading-relaxed text-stone md:text-lg">
+          Twelve ranks. Rituals. A passport you earn — never buy.
         </p>
-        <div className="animate-rise-delay mt-10 flex flex-wrap items-center gap-4">
-          <Link
-            href="/join"
-            className="rounded-full bg-matcha px-7 py-3.5 text-sm font-semibold tracking-wide text-void transition hover:bg-matcha-deep hover:text-bone"
-          >
-            Request membership
+        <div className="animate-rise-delay-2 mt-14 flex flex-col items-center gap-6 sm:flex-row">
+          <Link href="/join" className="cult-btn">
+            Request entry
           </Link>
           <Link
             href="/about"
-            className="text-sm text-mist underline-offset-4 hover:text-bone hover:underline"
+            className="text-[0.65rem] uppercase tracking-[0.22em] text-warm-grey underline-offset-4 hover:text-white hover:underline"
           >
-            What is CULT?
+            Doctrine
           </Link>
         </div>
       </section>
 
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[42vh] bg-[linear-gradient(to_top,rgba(11,9,8,0.95),transparent)]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[55vh] opacity-40"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%238fa978' stop-opacity='.25'/%3E%3Cstop offset='1' stop-color='%23c4a484' stop-opacity='.15'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cellipse cx='400' cy='520' rx='380' ry='160' fill='url(%23g)'/%3E%3Cpath d='M250 420c40-80 90-140 150-140s110 60 150 140' fill='none' stroke='%23f3eee6' stroke-opacity='.12' stroke-width='2'/%3E%3C/svg%3E\")",
-          backgroundPosition: "center bottom",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-        }}
-      />
+      <footer className="animate-rise-delay-2 relative z-10 border-t border-[var(--cult-line)] px-6 py-5 md:px-12">
+        <div className="mx-auto flex max-w-3xl items-center justify-between text-[0.6rem] uppercase tracking-[0.2em] text-warm-grey">
+          <span>XP · Credits · Passport</span>
+          <span>Never buy the climb</span>
+        </div>
+      </footer>
     </main>
   );
 }

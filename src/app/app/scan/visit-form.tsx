@@ -33,33 +33,31 @@ export function VisitVerifyForm() {
       return;
     }
     setMsg(
-      `${data.locationName} · +${data.xpAwarded} XP / +${data.creditsAwarded} cr${data.stampLabel ? ` · stamp “${data.stampLabel}”` : ""}`,
+      `Visit verified · +${data.xpAwarded} XP · +${data.creditsAwarded} credits${data.stampLabel ? ` · ${data.stampLabel}` : ""}`,
     );
     router.refresh();
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 space-y-3">
+    <form onSubmit={onSubmit} className="mt-8 space-y-6">
       <label className="block">
-        <span className="mb-1.5 block text-xs uppercase tracking-[0.2em] text-mist">
-          Visit code
-        </span>
         <input
           name="locationCode"
           required
-          placeholder="e.g. CULTHQ"
-          className="w-full rounded-xl border border-[var(--cult-line)] bg-soil/60 px-4 py-3 uppercase tracking-widest text-bone outline-none focus:border-matcha/60"
+          placeholder="CULTHQ"
+          className="w-full border-0 border-b border-[var(--cult-line-strong)] bg-transparent px-0 py-3 font-display text-2xl uppercase tracking-[0.28em] text-white outline-none placeholder:text-warm-grey/40 focus:border-white"
         />
       </label>
-      <p className="text-xs text-mist">
-        Server verifies location → passport stamp + ledger awards.
-      </p>
       {error && <p className="text-sm text-ember">{error}</p>}
-      {msg && <p className="text-sm text-matcha">{msg}</p>}
+      {msg && (
+        <p className="animate-rise text-sm font-light leading-relaxed text-stone">
+          {msg}
+        </p>
+      )}
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full border border-matcha/50 px-5 py-2.5 text-sm text-matcha disabled:opacity-60"
+        className="cult-btn disabled:opacity-50"
       >
         {pending ? "Verifying…" : "Verify visit"}
       </button>

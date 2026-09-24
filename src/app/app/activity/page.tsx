@@ -4,6 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { creditLedger, members, xpLedger } from "@/db/schema";
+import { formatXp } from "@/lib/design";
 
 export const metadata = { title: "Activity" };
 export const dynamic = "force-dynamic";
@@ -51,33 +52,41 @@ export default async function ActivityPage() {
   ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
 
   return (
-    <main className="mx-auto min-h-dvh max-w-lg px-5 pb-16 pt-6">
-      <Link href="/app" className="text-sm text-mist">
-        ← Home
+    <main className="px-6 pt-7">
+      <Link
+        href="/app/profile"
+        className="text-[0.62rem] uppercase tracking-[0.22em] text-warm-grey hover:text-white"
+      >
+        ← You
       </Link>
-      <h1 className="font-display mt-8 text-4xl text-bone">Activity</h1>
-      <p className="mt-2 text-mist">
-        Ledger truth · {member?.xpBalance ?? 0} XP · {member?.creditBalance ?? 0}{" "}
-        credits
+      <p className="cult-eyebrow mt-10">Ledger</p>
+      <h1 className="font-display mt-4 text-5xl font-medium text-white">
+        Activity
+      </h1>
+      <p className="mt-4 text-sm font-light text-stone">
+        {formatXp(member?.xpBalance ?? 0)} XP ·{" "}
+        {formatXp(member?.creditBalance ?? 0)} credits
       </p>
-      <ul className="mt-8 space-y-3">
+      <ul className="mt-12">
         {events.length === 0 && (
-          <li className="text-sm text-mist">No ledger activity yet.</li>
+          <li className="text-sm font-light text-warm-grey">
+            No ledger activity yet.
+          </li>
         )}
         {events.map((e) => (
           <li
             key={`${e.kind}-${e.id}`}
-            className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--cult-line)] bg-ink/40 px-4 py-3"
+            className="flex items-start justify-between gap-4 border-t border-[var(--cult-line)] py-5"
           >
             <div>
-              <p className="text-sm text-bone">{e.reason}</p>
-              <p className="mt-1 text-[10px] uppercase tracking-wider text-mist">
+              <p className="font-display text-lg text-white">{e.reason}</p>
+              <p className="mt-1 text-[0.55rem] uppercase tracking-[0.16em] text-warm-grey">
                 {e.kind} · {new Date(e.at).toLocaleString()}
               </p>
             </div>
             <p
-              className={`font-display text-lg tabular-nums ${
-                e.delta >= 0 ? "text-matcha" : "text-ember"
+              className={`font-display text-2xl tabular-nums ${
+                e.delta >= 0 ? "text-white" : "text-ember"
               }`}
             >
               {e.delta >= 0 ? "+" : ""}

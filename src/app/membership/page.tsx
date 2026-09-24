@@ -2,9 +2,9 @@ import Link from "next/link";
 import { asc } from "drizzle-orm";
 import { db } from "@/db";
 import { levels } from "@/db/schema";
+import { formatXp, rankIndex, rankTitle } from "@/lib/design";
 
 export const metadata = { title: "Membership" };
-
 export const dynamic = "force-dynamic";
 
 export default async function MembershipPage() {
@@ -16,40 +16,46 @@ export default async function MembershipPage() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh max-w-3xl px-5 py-10 md:px-8">
-      <Link href="/" className="font-display text-xl tracking-[0.2em] text-bone">
+    <main className="mx-auto min-h-dvh max-w-3xl px-6 py-10 md:px-10">
+      <Link
+        href="/"
+        className="font-display text-2xl font-semibold tracking-[0.3em] text-white"
+      >
         CULT
       </Link>
-      <h1 className="font-display mt-14 text-4xl text-bone md:text-5xl">
-        Twelve thresholds.
+      <p className="cult-eyebrow mt-20">Thresholds</p>
+      <h1 className="font-display mt-5 text-5xl font-medium text-white md:text-6xl">
+        Twelve ranks.
       </h1>
-      <p className="mt-4 max-w-md text-mist">
-        Progress is XP. Spend is CULT Credits. They never mix.
+      <p className="mt-5 max-w-md font-light text-stone">
+        Progress is XP. Spend is Credits. They never mix.
       </p>
-      <ol className="mt-12 space-y-0 border-t border-[var(--cult-line)]">
-        {rows.map((l) => (
+      <ol className="mt-16">
+        {rows.map((l, i) => (
           <li
             key={l.id}
-            className="flex items-baseline justify-between gap-4 border-b border-[var(--cult-line)] py-4"
+            className="flex items-baseline justify-between gap-4 border-t border-[var(--cult-line)] py-6 animate-rise"
+            style={{ animationDelay: `${i * 50}ms` }}
           >
             <div>
-              <span className="mr-3 font-display text-copper">
-                {(l.visualMeta as { mark?: string })?.mark ?? l.rank}
-              </span>
-              <span className="text-bone">{l.name}</span>
+              <p className="cult-meta mb-1">{rankIndex(l.rank)}</p>
+              <p className="font-display text-2xl text-white md:text-3xl">
+                {rankTitle(l.name)}
+              </p>
             </div>
-            <span className="text-sm tabular-nums text-mist">{l.xpThreshold} XP</span>
+            <span className="cult-meta tabular-nums">
+              {formatXp(l.xpThreshold)} XP
+            </span>
           </li>
         ))}
         {rows.length === 0 && (
-          <li className="py-8 text-mist">Levels load when the database is seeded.</li>
+          <li className="border-t border-[var(--cult-line)] py-8 text-warm-grey">
+            Ranks load when the database is seeded.
+          </li>
         )}
       </ol>
-      <Link
-        href="/join"
-        className="mt-12 inline-flex rounded-full bg-matcha px-6 py-3 text-sm font-semibold text-void"
-      >
-        Request membership
+      <Link href="/join" className="cult-btn mt-14 inline-flex">
+        Request entry
       </Link>
     </main>
   );

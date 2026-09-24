@@ -19,28 +19,34 @@ export default async function OfferingsPage() {
     .where(eq(offerings.status, "active"));
 
   return (
-    <main className="mx-auto min-h-dvh max-w-lg px-5 pb-16 pt-6">
-      <Link href="/app" className="text-sm text-mist">
-        ← Home
-      </Link>
-      <h1 className="font-display mt-8 text-4xl text-bone">Offerings</h1>
-      <p className="mt-2 text-mist">
-        Spend CULT Credits. Cost & eligibility are server-side.
+    <main className="px-6 pt-7">
+      <p className="cult-eyebrow">Discovery</p>
+      <h1 className="font-display mt-4 text-5xl font-medium leading-none text-white">
+        Offerings
+      </h1>
+      <p className="mt-4 max-w-sm text-sm font-light text-stone">
+        Spend CULT Credits. Eligibility is server-side.
       </p>
-      <ul className="mt-8 space-y-4">
-        {list.map((o) => (
+
+      <ul className="mt-14">
+        {list.map((o, i) => (
           <li
             key={o.id}
-            className="rounded-2xl border border-[var(--cult-line)] bg-ink/50 p-5"
+            className="border-t border-[var(--cult-line)] py-10 first:border-t-0 first:pt-0"
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg text-bone">{o.name}</h2>
-                <p className="mt-1 text-sm text-mist">{o.description}</p>
-                <p className="mt-3 text-xs text-copper">
-                  {o.creditCost} credits · lvl {o.minLevelRank}+
-                </p>
-              </div>
+            <p className="cult-eyebrow">
+              Offering / {String(i + 1).padStart(2, "0")}
+            </p>
+            <h2 className="font-display mt-4 text-3xl font-medium text-white">
+              {o.name}
+            </h2>
+            <p className="mt-3 text-sm font-light leading-relaxed text-warm-grey">
+              {o.description}
+            </p>
+            <div className="mt-8 flex items-end justify-between gap-4">
+              <p className="cult-meta text-stone">
+                {o.creditCost} credits · rank {o.minLevelRank}+
+              </p>
               <RedeemButton offeringId={o.id} />
             </div>
           </li>

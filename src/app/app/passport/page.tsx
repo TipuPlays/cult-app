@@ -4,10 +4,46 @@ import { asc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { levels, members, passportStamps } from "@/db/schema";
-import { VISIT_LOCATIONS } from "@/lib/visits";
+import { formatXp, rankIndex, rankTitle } from "@/lib/design";
 
 export const metadata = { title: "Passport" };
 export const dynamic = "force-dynamic";
+
+/** Museum catalogue — categories with earned + locked slots */
+const CATALOGUE = [
+  {
+    title: "Espresso",
+    slots: [
+      { slug: "flagship", label: "Flagship" },
+      { slug: "null-espresso-2", label: "Single Origin", locked: true },
+      { slug: "null-espresso-3", label: "Ristretto", locked: true },
+    ],
+  },
+  {
+    title: "Matcha",
+    slots: [
+      { slug: "ceremonial-bar", label: "Ceremonial" },
+      { slug: "null-matcha-2", label: "Usucha", locked: true },
+      { slug: "null-matcha-3", label: "Koicha", locked: true },
+    ],
+  },
+  {
+    title: "Signatures",
+    slots: [
+      { slug: "origin-lab", label: "Origin Lab" },
+      { slug: "null-sig-2", label: "House Blend", locked: true },
+      { slug: "null-sig-3", label: "Seasonal", locked: true },
+    ],
+  },
+  {
+    title: "Pairings",
+    slots: [
+      { slug: "null-pair-1", label: "Pastry", locked: true },
+      { slug: "null-pair-2", label: "Chocolate", locked: true },
+      { slug: "null-pair-3", label: "Cheese", locked: true },
+    ],
+  },
+] as const;
 
 export default async function PassportPage() {
   const session = await auth();
@@ -25,76 +61,110 @@ export default async function PassportPage() {
     .where(eq(passportStamps.memberId, session.user.memberId));
 
   const stampSet = new Set(stamps.map((s) => s.stampSlug));
-  const catalog = Object.values(VISIT_LOCATIONS);
+  const current = allLevels.find((l) => l.id === member?.currentLevelId);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-lg px-5 pb-16 pt-6">
-      <Link href="/app" className="text-sm text-mist">
-        ← Home
-      </Link>
-      <h1 className="font-display mt-8 text-4xl text-bone">Passport</h1>
-      <p className="mt-2 text-mist">
-        {member?.displayName} · {member?.xpBalance ?? 0} XP
+    <main className="px-6 pt-7">
+      <p className="cult-eyebrow">Archive</p>
+      <h1 className="font-display mt-4 text-5xl font-medium leading-none text-white">
+        Your
+        <br />
+        Passport
+      </h1>
+      <p className="mt-5 text-sm font-light text-stone">
+        {member?.displayName} · {formatXp(member?.xpBalance ?? 0)} XP
       </p>
 
-      <section className="mt-10">
-        <h2 className="font-display text-2xl text-bone">Stamps</h2>
-        <p className="mt-1 text-sm text-mist">
-          Earned from verified visits — not purchased.
-        </p>
-        <ul className="mt-4 grid grid-cols-3 gap-3">
-          {catalog.map((loc) => {
-            const earned = stampSet.has(loc.stampSlug);
-            return (
-              <li
-                key={loc.stampSlug}
-                className={`flex aspect-square flex-col items-center justify-center rounded-2xl border px-2 text-center ${
-                  earned
-                    ? "border-matcha/50 bg-matcha/10 text-bone"
-                    : "border-[var(--cult-line)] text-mist/40"
-                }`}
-              >
-                <span className="font-display text-lg">
-                  {earned ? "◎" : "○"}
-                </span>
-                <span className="mt-1 text-[10px] uppercase tracking-wider">
-                  {loc.stampLabel}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-        <Link href="/app/scan" className="mt-4 inline-block text-sm text-matcha">
-          Verify a visit →
-        </Link>
+      <section className="mt-16 space-y-12">
+        {CATALOGUE.map((cat) => {
+          const dots = cat.slots.map((s) =>
+            !("locked" in s && s.locked) && stampSet.has(s.slug),
+          );
+          return (
+            <div key={cat.title}>
+              <div className="flex items-baseline justify-between gap-4">
+                <h2 className="font-display text-2xl text-white">{cat.title}</h2>
+                <p className="flex gap-2 text-sm tracking-[0.2em] text-warm-grey">
+                  {dots.map((on, i) => (
+                    <span key={i} className={on ? "text-white" : "text-warm-grey/40"}>
+                      {on ? "●" : "○"}
+                    </span>
+                  ))}
+                </p>
+              </div>
+              <ul className="mt-5 grid grid-cols-3 gap-px bg-[var(--cult-line)]">
+                {cat.slots.map((slot) => {
+                  const locked = "locked" in slot && slot.locked;
+                  const earned = !locked && stampSet.has(slot.slug);
+                  return (
+                    <li
+                      key={slot.slug}
+                      className={`cult-stamp bg-near-black px-3 py-7 text-center ${
+                        earned
+                          ? "is-earned text-white"
+                          : locked
+                            ? "is-locked text-warm-grey"
+                            : "text-warm-grey/50"
+                      }`}
+                    >
+                      <span className="font-display text-xl leading-none">
+                        {earned ? "◎" : "○"}
+                      </span>
+                      <span className="mt-3 block text-[0.55rem] uppercase tracking-[0.16em]">
+                        {slot.label}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })}
       </section>
 
-      <section className="mt-12">
-        <h2 className="font-display text-2xl text-bone">Levels</h2>
-        <ol className="mt-4 space-y-2">
+      <p className="mt-10">
+        <Link
+          href="/app/scan"
+          className="cult-meta text-stone hover:text-white"
+        >
+          Verify a visit →
+        </Link>
+      </p>
+
+      <section className="mt-20">
+        <h2 className="font-display text-3xl font-medium text-white">Ranks</h2>
+        <ol className="mt-8">
           {allLevels.map((l) => {
             const unlocked = (member?.xpBalance ?? 0) >= l.xpThreshold;
-            const current = member?.currentLevelId === l.id;
+            const isCurrent = member?.currentLevelId === l.id;
             return (
               <li
                 key={l.id}
-                className={`flex items-center justify-between rounded-xl border px-4 py-3 ${
-                  current
-                    ? "border-matcha/50 bg-matcha/10"
-                    : "border-[var(--cult-line)]"
-                } ${unlocked ? "text-bone" : "text-mist/50"}`}
+                className={`flex items-baseline justify-between border-t border-[var(--cult-line)] py-5 ${
+                  unlocked ? "text-white" : "text-warm-grey/35"
+                }`}
               >
-                <span>
-                  <span className="mr-2 font-display text-copper">
-                    {(l.visualMeta as { mark?: string })?.mark}
-                  </span>
-                  {l.name}
+                <div>
+                  <p className="cult-meta mb-1">
+                    {rankIndex(l.rank)}
+                    {isCurrent ? " · Current" : ""}
+                  </p>
+                  <p className="font-display text-xl">
+                    {rankTitle(l.name)}
+                  </p>
+                </div>
+                <span className="cult-meta tabular-nums">
+                  {formatXp(l.xpThreshold)} XP
                 </span>
-                <span className="text-xs tabular-nums">{l.xpThreshold}</span>
               </li>
             );
           })}
         </ol>
+        {current && (
+          <p className="cult-meta mt-8 text-stone">
+            You hold {rankTitle(current.name)}
+          </p>
+        )}
       </section>
     </main>
   );

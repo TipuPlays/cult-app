@@ -7,7 +7,7 @@ import { db } from "@/db";
 import { members } from "@/db/schema";
 import { isStaffRole } from "@/lib/rbac";
 
-export const metadata = { title: "Profile" };
+export const metadata = { title: "You" };
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
@@ -22,84 +22,110 @@ export default async function ProfilePage() {
 
   const badges = await listMemberBadges(session.user.memberId);
 
+  const links = [
+    { href: "/app/passport", label: "Passport" },
+    { href: "/app/activity", label: "Activity" },
+    { href: "/app/events", label: "Events" },
+    { href: "/app/referrals", label: "Invite" },
+    { href: "/app/settings", label: "Settings" },
+  ];
+
   return (
-    <main className="mx-auto min-h-dvh max-w-lg px-5 pb-16 pt-6">
-      <Link href="/app" className="text-sm text-mist">
-        ← Home
-      </Link>
-      <h1 className="font-display mt-8 text-4xl text-bone">Profile</h1>
-      <dl className="mt-8 space-y-4 text-sm">
-        <div>
-          <dt className="text-mist">Society name</dt>
-          <dd className="text-bone">{member?.displayName}</dd>
-        </div>
-        <div>
-          <dt className="text-mist">Email</dt>
-          <dd className="text-bone">{session.user.email}</dd>
-        </div>
-        <div>
-          <dt className="text-mist">Role</dt>
-          <dd className="text-bone">{session.user.role}</dd>
-        </div>
-        <div>
-          <dt className="text-mist">Join code</dt>
-          <dd className="tracking-widest text-bone">{member?.joinCode}</dd>
-        </div>
+    <main className="px-6 pt-7">
+      <p className="cult-eyebrow">Identity</p>
+      <h1 className="font-display mt-4 text-5xl font-medium text-white">You</h1>
+
+      <dl className="mt-14">
+        <Row label="Society name" value={member?.displayName ?? "—"} />
+        <Row label="Email" value={session.user.email ?? "—"} />
+        <Row label="Role" value={session.user.role} />
+        <Row label="Join code" value={member?.joinCode ?? "—"} mono />
       </dl>
 
-      <section className="mt-10">
-        <h2 className="font-display text-2xl text-bone">Badges</h2>
-        <ul className="mt-4 grid grid-cols-2 gap-3">
+      <section className="mt-16">
+        <h2 className="font-display text-3xl font-medium text-white">Marks</h2>
+        <ul className="mt-8 grid grid-cols-2 gap-px bg-[var(--cult-line)]">
           {badges.length === 0 && (
-            <li className="col-span-2 text-sm text-mist">
-              Earn stamps, rituals, and levels to unlock badges.
+            <li className="col-span-2 bg-near-black px-4 py-10 text-sm font-light text-warm-grey">
+              Earn stamps, rituals, and ranks to unlock marks.
             </li>
           )}
           {badges.map((b) => (
             <li
               key={b.id}
-              className="rounded-2xl border border-matcha/30 bg-matcha/10 px-3 py-4 text-center"
+              className="cult-stamp is-earned bg-near-black px-4 py-7 text-center"
             >
-              <p className="font-display text-bone">{b.name}</p>
-              <p className="mt-1 text-[10px] text-mist">{b.description}</p>
+              <p className="font-display text-xl text-white">{b.name}</p>
+              <p className="mt-2 text-[0.55rem] leading-relaxed text-warm-grey">
+                {b.description}
+              </p>
             </li>
           ))}
         </ul>
       </section>
 
-      <div className="mt-8 flex flex-col gap-3 text-sm">
-        <Link href="/app/passport" className="text-matcha">
-          Passport →
-        </Link>
-        <Link href="/app/referrals" className="text-matcha">
-          Referrals →
-        </Link>
-        <Link href="/app/events" className="text-matcha">
-          Events →
-        </Link>
-        <Link href="/app/activity" className="text-matcha">
-          Activity →
-        </Link>
-        <Link href="/app/settings" className="text-matcha">
-          Settings →
-        </Link>
-        {isStaffRole(session.user.role) && (
-          <Link href="/admin" className="text-matcha">
-            Admin console →
-          </Link>
-        )}
-      </div>
+      <nav className="mt-14">
+        <ul>
+          {links.map((l) => (
+            <li key={l.href} className="border-t border-[var(--cult-line)]">
+              <Link
+                href={l.href}
+                className="flex items-center justify-between py-5 text-white transition hover:text-stone"
+              >
+                <span className="font-display text-xl">{l.label}</span>
+                <span className="cult-meta">→</span>
+              </Link>
+            </li>
+          ))}
+          {isStaffRole(session.user.role) && (
+            <li className="border-t border-[var(--cult-line)]">
+              <Link
+                href="/admin"
+                className="flex items-center justify-between py-5 text-white transition hover:text-stone"
+              >
+                <span className="font-display text-xl">Admin</span>
+                <span className="cult-meta">→</span>
+              </Link>
+            </li>
+          )}
+        </ul>
+      </nav>
+
       <form
-        className="mt-10"
+        className="mt-12 border-t border-[var(--cult-line)] pt-8"
         action={async () => {
           "use server";
           await signOut({ redirectTo: "/" });
         }}
       >
-        <button type="submit" className="text-sm text-ember">
-          Sign out
+        <button
+          type="submit"
+          className="text-[0.62rem] uppercase tracking-[0.22em] text-ember hover:text-white"
+        >
+          Exit CULT
         </button>
       </form>
     </main>
+  );
+}
+
+function Row({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-t border-[var(--cult-line)] py-4">
+      <dt className="cult-eyebrow shrink-0">{label}</dt>
+      <dd
+        className={`text-right text-white ${mono ? "tracking-[0.28em]" : "font-light"}`}
+      >
+        {value}
+      </dd>
+    </div>
   );
 }

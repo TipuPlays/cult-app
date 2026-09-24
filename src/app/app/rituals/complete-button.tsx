@@ -37,32 +37,36 @@ export function CompleteRitualButton({
       return;
     }
     if (verifyMode === "visit_code") {
-      setMsg(data.note ?? "Logged — verify visit on Scan for stamp");
+      setMsg(data.note ?? "Logged — verify visit on Scan");
     } else {
-      setMsg(data.replayed ? "Already recorded" : "Sealed");
+      setMsg(data.replayed ? "Already recorded" : "Complete");
     }
     router.refresh();
   }
 
   return (
-    <div className="text-right">
+    <div className="shrink-0 text-right">
       {verifyMode === "visit_code" && (
         <input
           value={visitCode}
           onChange={(e) => setVisitCode(e.target.value)}
           placeholder="CODE"
-          className="mb-2 w-24 rounded-lg border border-[var(--cult-line)] bg-void/50 px-2 py-1 text-xs uppercase tracking-widest text-bone"
+          className="mb-3 w-28 border-0 border-b border-[var(--cult-line-strong)] bg-transparent px-0 py-1 text-center text-xs uppercase tracking-[0.22em] text-white outline-none focus:border-white"
         />
       )}
       <button
         type="button"
         onClick={complete}
         disabled={pending || (verifyMode === "visit_code" && !visitCode)}
-        className="rounded-full border border-matcha/40 px-4 py-2 text-xs uppercase tracking-wider text-matcha disabled:opacity-50"
+        className="text-[0.62rem] uppercase tracking-[0.22em] text-stone transition hover:text-white disabled:opacity-40"
       >
-        {pending ? "…" : "Complete"}
+        {pending ? "…" : "Begin ritual →"}
       </button>
-      {msg && <p className="mt-1 text-[10px] text-mist">{msg}</p>}
+      {msg && (
+        <p className="mt-2 max-w-[10rem] text-[0.55rem] uppercase tracking-[0.14em] text-warm-grey">
+          {msg}
+        </p>
+      )}
     </div>
   );
 }

@@ -37,19 +37,19 @@ export function ReferralClaimForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-4 space-y-3">
+    <form onSubmit={onSubmit} className="mt-8 space-y-5">
       <input
         name="code"
         required
         placeholder="CULT-XXXXXXXX"
-        className="w-full rounded-xl border border-[var(--cult-line)] bg-soil/60 px-4 py-3 uppercase tracking-widest text-bone outline-none focus:border-matcha/60"
+        className="w-full border-0 border-b border-[var(--cult-line-strong)] bg-transparent px-0 py-3 uppercase tracking-[0.28em] text-white outline-none focus:border-white"
       />
       {error && <p className="text-sm text-ember">{error}</p>}
-      {msg && <p className="text-sm text-matcha">{msg}</p>}
+      {msg && <p className="text-sm font-light text-stone">{msg}</p>}
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-matcha px-5 py-2.5 text-sm font-semibold text-void disabled:opacity-60"
+        className="cult-btn disabled:opacity-50"
       >
         {pending ? "Claiming…" : "Claim code"}
       </button>

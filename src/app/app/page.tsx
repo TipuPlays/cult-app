@@ -1,21 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { auth, signOut } from "@/auth";
 import { db } from "@/db";
-import { levels, members, passportStamps, rituals } from "@/db/schema";
+import { creditLedger, levels, members, passportStamps, rituals } from "@/db/schema";
+import { formatXp, rankIndex, rankTitle } from "@/lib/design";
 
 export const metadata = { title: "Home" };
 export const dynamic = "force-dynamic";
-
-const NAV = [
-  { href: "/app", label: "Home" },
-  { href: "/app/rituals", label: "Rituals" },
-  { href: "/app/events", label: "Events" },
-  { href: "/app/scan", label: "Scan" },
-  { href: "/app/referrals", label: "Invite" },
-  { href: "/app/profile", label: "Profile" },
-] as const;
 
 export default async function AppHomePage() {
   const session = await auth();
@@ -39,23 +31,49 @@ export default async function AppHomePage() {
     level = row;
   }
 
+  const allLevels = await db.select().from(levels).orderBy(asc(levels.rank));
+  const nextLevel = allLevels.find((l) => l.xpThreshold > member.xpBalance);
+  const prevThreshold = level?.xpThreshold ?? 0;
+  const nextThreshold = nextLevel?.xpThreshold ?? (member.xpBalance || 1);
+  const span = Math.max(1, nextThreshold - prevThreshold);
+  const progress = nextLevel
+    ? Math.min(1, Math.max(0, (member.xpBalance - prevThreshold) / span))
+    : 1;
+  const xpToNext = nextLevel
+    ? Math.max(0, nextThreshold - member.xpBalance)
+    : 0;
+
   const [stampCount] = await db
     .select({ c: sql<number>`count(*)::int` })
     .from(passportStamps)
     .where(eq(passportStamps.memberId, member.id));
 
+  const earnedCredits = await db
+    .select({ s: sql<number>`coalesce(sum(case when ${creditLedger.delta} > 0 then ${creditLedger.delta} else 0 end), 0)::int` })
+    .from(creditLedger)
+    .where(eq(creditLedger.memberId, member.id));
+
+  const spentCredits = await db
+    .select({ s: sql<number>`coalesce(sum(case when ${creditLedger.delta} < 0 then -${creditLedger.delta} else 0 end), 0)::int` })
+    .from(creditLedger)
+    .where(eq(creditLedger.memberId, member.id));
+
   const activeRituals = await db
     .select()
     .from(rituals)
     .where(eq(rituals.active, true))
-    .limit(3);
+    .limit(2);
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pb-28 pt-6">
+    <div className="px-6 pt-7">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-display text-2xl tracking-[0.18em] text-bone">CULT</p>
-          <p className="mt-1 text-sm text-mist">Welcome back, {member.displayName}</p>
+          <p className="font-display text-2xl font-semibold tracking-[0.3em] text-white">
+            CULT
+          </p>
+          <p className="mt-2 text-sm font-light text-warm-grey">
+            {member.displayName}
+          </p>
         </div>
         <form
           action={async () => {
@@ -63,113 +81,113 @@ export default async function AppHomePage() {
             await signOut({ redirectTo: "/" });
           }}
         >
-          <button type="submit" className="text-xs uppercase tracking-widest text-mist">
+          <button
+            type="submit"
+            className="text-[0.62rem] uppercase tracking-[0.22em] text-warm-grey hover:text-white"
+          >
             Exit
           </button>
         </form>
       </header>
 
-      <section className="animate-rise mt-10 overflow-hidden rounded-[1.75rem] border border-[var(--cult-line)] bg-gradient-to-br from-soil/80 to-void p-6">
-        <div className="flex items-start justify-between">
-          <p className="text-xs uppercase tracking-[0.3em] text-copper">Passport</p>
-          <Link href="/app/passport" className="text-xs text-matcha">
-            Open →
-          </Link>
-        </div>
-        <h1 className="font-display mt-3 text-3xl text-bone">
-          {level?.name ?? "Initiate"}
+      {/* Membership rank — prestigious, not game HUD */}
+      <section className="animate-rise mt-14">
+        <p className="cult-eyebrow">Membership</p>
+        <h1 className="font-display mt-5 text-[clamp(2.8rem,12vw,4.25rem)] font-medium leading-[0.92] tracking-[-0.02em] text-white">
+          {rankTitle(level?.name).split(" ").map((w, i) => (
+            <span key={i} className="block">
+              {w}
+            </span>
+          ))}
         </h1>
-        <p className="mt-1 text-sm text-mist">
-          Mark{" "}
-          <span className="text-bone">
-            {(level?.visualMeta as { mark?: string } | null)?.mark ?? "I"}
-          </span>
-          {" · "}
-          {stampCount?.c ?? 0} stamps
+        <p className="cult-meta mt-6">
+          Level {rankIndex(level?.rank ?? 1)}
         </p>
-        <div className="mt-8 grid grid-cols-2 gap-4">
-          <Stat label="XP" value={String(member.xpBalance)} />
-          <Stat label="Credits" value={String(member.creditBalance)} />
+        <p className="mt-8 font-display text-3xl tabular-nums text-white">
+          {formatXp(member.xpBalance)}{" "}
+          <span className="text-base tracking-[0.2em] text-warm-grey">XP</span>
+        </p>
+        <hr className="cult-rule mt-8 max-w-[12rem]" />
+        {nextLevel ? (
+          <p className="cult-meta mt-5">
+            {formatXp(xpToNext)} XP to {rankTitle(nextLevel.name)}
+          </p>
+        ) : (
+          <p className="cult-meta mt-5">Threshold complete</p>
+        )}
+        <div className="cult-xp-track mt-6 max-w-xs">
+          <div
+            className="cult-xp-fill"
+            style={{ width: `${Math.round(progress * 100)}%` }}
+          />
         </div>
-        <p className="mt-6 text-xs text-mist">
-          Code <span className="tracking-widest text-bone">{member.joinCode}</span>
-        </p>
-      </section>
-
-      <section className="animate-rise-delay mt-6 grid grid-cols-2 gap-3">
-        <QuickLink href="/app/scan" label="Verify visit" sub="Stamp + XP" />
-        <QuickLink href="/app/rituals" label="Rituals" sub="Daily practice" />
-      </section>
-
-      <section className="animate-rise-delay mt-10">
-        <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl text-bone">Today&apos;s rituals</h2>
-          <Link href="/app/rituals" className="text-sm text-matcha">
-            All
+        <div className="mt-8 flex gap-8">
+          <Link
+            href="/app/passport"
+            className="cult-meta text-stone hover:text-white"
+          >
+            Passport · {stampCount?.c ?? 0} stamps →
           </Link>
         </div>
-        <ul className="mt-4 space-y-3">
-          {activeRituals.map((r) => (
+      </section>
+
+      {/* CULT Credits — separate from XP */}
+      <section className="animate-rise-delay cult-panel mt-14 p-6">
+        <p className="cult-eyebrow">Cult credits</p>
+        <p className="font-display mt-4 text-4xl tabular-nums text-white">
+          {formatXp(member.creditBalance)}
+        </p>
+        <p className="cult-meta mt-2">Available</p>
+        <hr className="cult-rule my-6" />
+        <div className="flex justify-between text-[0.65rem] uppercase tracking-[0.16em] text-warm-grey">
+          <span>Earned</span>
+          <span className="tabular-nums text-stone">
+            +{formatXp(earnedCredits[0]?.s ?? 0)}
+          </span>
+        </div>
+        <div className="mt-3 flex justify-between text-[0.65rem] uppercase tracking-[0.16em] text-warm-grey">
+          <span>Spent</span>
+          <span className="tabular-nums text-stone">
+            −{formatXp(spentCredits[0]?.s ?? 0)}
+          </span>
+        </div>
+        <Link
+          href="/app/offerings"
+          className="cult-meta mt-8 inline-block text-stone hover:text-white"
+        >
+          View offerings →
+        </Link>
+      </section>
+
+      <section className="animate-rise-delay-2 mt-16">
+        <div className="flex items-end justify-between">
+          <h2 className="font-display text-3xl font-medium text-white">
+            Rituals
+          </h2>
+          <Link
+            href="/app/rituals"
+            className="cult-meta text-warm-grey hover:text-white"
+          >
+            All →
+          </Link>
+        </div>
+        <ul className="mt-8">
+          {activeRituals.map((r, i) => (
             <li
               key={r.id}
-              className="rounded-2xl border border-[var(--cult-line)] bg-ink/40 px-4 py-4"
+              className="border-t border-[var(--cult-line)] py-6"
             >
-              <p className="text-bone">{r.name}</p>
-              <p className="mt-1 text-sm text-mist">{r.description}</p>
-              <p className="mt-2 text-xs text-copper">
-                {r.verifyMode !== "none" ? `${r.verifyMode} · ` : ""}
-                {r.verifyMode === "visit_code"
-                  ? "awards via visit verify"
-                  : `+${r.xpReward} XP${r.creditReward > 0 ? ` · +${r.creditReward} cr` : ""}`}
+              <p className="cult-eyebrow">
+                Ritual {String(r.sortOrder ?? i + 1).padStart(2, "0")}
+              </p>
+              <p className="font-display mt-2 text-2xl text-white">{r.name}</p>
+              <p className="mt-2 text-sm font-light text-warm-grey">
+                {r.description}
               </p>
             </li>
           ))}
         </ul>
       </section>
-
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--cult-line)] bg-void/90 backdrop-blur-md">
-        <ul className="mx-auto flex max-w-lg items-stretch justify-between px-2 py-2">
-          {NAV.map((item) => (
-            <li key={item.href} className="flex-1">
-              <Link
-                href={item.href}
-                className="flex flex-col items-center gap-1 px-1 py-2 text-[10px] uppercase tracking-wider text-mist hover:text-bone"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
     </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-void/50 px-4 py-3">
-      <p className="text-[10px] uppercase tracking-[0.25em] text-mist">{label}</p>
-      <p className="mt-1 font-display text-2xl tabular-nums text-bone">{value}</p>
-    </div>
-  );
-}
-
-function QuickLink({
-  href,
-  label,
-  sub,
-}: {
-  href: string;
-  label: string;
-  sub: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="rounded-2xl border border-[var(--cult-line)] bg-ink/30 px-4 py-4 transition hover:border-matcha/40"
-    >
-      <p className="text-sm text-bone">{label}</p>
-      <p className="mt-1 text-xs text-mist">{sub}</p>
-    </Link>
   );
 }

@@ -38,34 +38,34 @@ export function RsvpButton({
 
   if (current === "going" || current === "waitlist") {
     return (
-      <div className="text-right">
-        <p className="mb-1 text-[10px] uppercase tracking-wider text-matcha">
+      <div className="shrink-0 text-right">
+        <p className="mb-2 text-[0.55rem] uppercase tracking-[0.18em] text-stone">
           {current}
         </p>
         <button
           type="button"
           disabled={pending}
           onClick={() => act("cancelled")}
-          className="text-xs text-ember"
+          className="text-[0.62rem] uppercase tracking-[0.16em] text-ember hover:text-white"
         >
           Cancel
         </button>
-        {msg && <p className="text-[10px] text-mist">{msg}</p>}
+        {msg && <p className="mt-1 text-[0.55rem] text-warm-grey">{msg}</p>}
       </div>
     );
   }
 
   return (
-    <div className="text-right">
+    <div className="shrink-0 text-right">
       <button
         type="button"
         disabled={pending}
         onClick={() => act("going")}
-        className="rounded-full border border-matcha/40 px-4 py-2 text-xs uppercase tracking-wider text-matcha disabled:opacity-50"
+        className="text-[0.62rem] uppercase tracking-[0.22em] text-stone transition hover:text-white disabled:opacity-40"
       >
-        {pending ? "…" : "RSVP"}
+        {pending ? "…" : "RSVP →"}
       </button>
-      {msg && <p className="mt-1 text-[10px] text-mist">{msg}</p>}
+      {msg && <p className="mt-2 text-[0.55rem] text-warm-grey">{msg}</p>}
     </div>
   );
 }

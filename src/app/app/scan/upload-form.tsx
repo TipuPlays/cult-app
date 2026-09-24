@@ -37,37 +37,31 @@ export function ReceiptUploadForm() {
       setError(data.error ?? "Upload failed");
       return;
     }
-    setMsg(`Status: ${data.status} · fraud ${data.fraudScore ?? 0}`);
+    setMsg(`Received · ${data.status}`);
     router.refresh();
     e.currentTarget.reset();
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 space-y-4">
+    <form onSubmit={onSubmit} className="mt-8 space-y-5">
       <label className="block">
-        <span className="mb-2 block text-xs uppercase tracking-[0.2em] text-mist">
-          Receipt image
-        </span>
+        <span className="cult-eyebrow mb-3 block">Image</span>
         <input
           name="file"
           type="file"
           accept="image/*,.pdf"
           required
-          className="w-full text-sm text-mist file:mr-4 file:rounded-full file:border-0 file:bg-matcha file:px-4 file:py-2 file:text-sm file:font-semibold file:text-void"
+          className="w-full text-sm text-warm-grey file:mr-4 file:border file:border-white file:bg-transparent file:px-4 file:py-2 file:text-[0.62rem] file:uppercase file:tracking-[0.18em] file:text-white"
         />
       </label>
-      <p className="text-xs text-mist">
-        Rewards are computed server-side after admin approval. Client XP/credits
-        are ignored.
-      </p>
       {error && <p className="text-sm text-ember">{error}</p>}
-      {msg && <p className="text-sm text-matcha">{msg}</p>}
+      {msg && <p className="text-sm font-light text-stone">{msg}</p>}
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-matcha px-6 py-3 text-sm font-semibold text-void disabled:opacity-60"
+        className="cult-btn cult-btn-line disabled:opacity-50"
       >
-        {pending ? "Verifying…" : "Submit receipt"}
+        {pending ? "Submitting…" : "Submit receipt"}
       </button>
     </form>
   );

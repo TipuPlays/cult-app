@@ -7,7 +7,7 @@ import { referralClaims } from "@/db/schema";
 import { ensureReferralCode } from "@/lib/referrals";
 import { ReferralClaimForm } from "./claim-form";
 
-export const metadata = { title: "Referrals" };
+export const metadata = { title: "Invite" };
 export const dynamic = "force-dynamic";
 
 export default async function ReferralsPage() {
@@ -23,41 +23,52 @@ export default async function ReferralsPage() {
     .limit(20);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-lg px-5 pb-16 pt-6">
-      <Link href="/app" className="text-sm text-mist">
-        ← Home
+    <main className="px-6 pt-7">
+      <Link
+        href="/app/profile"
+        className="text-[0.62rem] uppercase tracking-[0.22em] text-warm-grey hover:text-white"
+      >
+        ← You
       </Link>
-      <h1 className="font-display mt-8 text-4xl text-bone">Referrals</h1>
-      <p className="mt-2 text-mist">
+      <p className="cult-eyebrow mt-10">Grow the circle</p>
+      <h1 className="font-display mt-4 text-5xl font-medium text-white">
+        Invite
+      </h1>
+      <p className="mt-4 max-w-sm text-sm font-light text-stone">
         Share your code. Awards land via ledgers — no self-referral.
       </p>
 
-      <section className="mt-10 rounded-2xl border border-[var(--cult-line)] bg-ink/40 p-5">
-        <p className="text-xs uppercase tracking-[0.25em] text-copper">
-          Your code
-        </p>
-        <p className="mt-3 font-display text-3xl tracking-widest text-bone">
+      <section className="cult-panel mt-12 p-8 text-center">
+        <p className="cult-eyebrow">Your code</p>
+        <p className="font-display mt-5 text-3xl tracking-[0.28em] text-white md:text-4xl">
           {code.code}
         </p>
       </section>
 
-      <section className="mt-10">
-        <h2 className="font-display text-2xl text-bone">Enter a code</h2>
+      <section className="mt-14">
+        <h2 className="font-display text-3xl font-medium text-white">
+          Enter a code
+        </h2>
         <ReferralClaimForm />
       </section>
 
-      <section className="mt-12">
-        <h2 className="font-display text-2xl text-bone">Your invites</h2>
-        <ul className="mt-4 space-y-2">
+      <section className="mt-16">
+        <h2 className="font-display text-3xl font-medium text-white">
+          Your invites
+        </h2>
+        <ul className="mt-6">
           {claims.length === 0 && (
-            <li className="text-sm text-mist">No claims yet.</li>
+            <li className="text-sm font-light text-warm-grey">No claims yet.</li>
           )}
           {claims.map((c) => (
             <li
               key={c.id}
-              className="rounded-xl border border-[var(--cult-line)] px-4 py-3 text-sm text-mist"
+              className="border-t border-[var(--cult-line)] py-4 text-sm font-light text-warm-grey"
             >
-              {c.status} · +{c.referrerXp} XP / +{c.referrerCredits} cr ·{" "}
+              <span className="uppercase tracking-[0.14em] text-stone">
+                {c.status}
+              </span>
+              {" · "}+{c.referrerXp} XP / +{c.referrerCredits} CR ·{" "}
               {new Date(c.createdAt).toLocaleDateString()}
             </li>
           ))}

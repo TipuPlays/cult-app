@@ -41,21 +41,29 @@ export function NotifyPrefsForm({ initial }: { initial: Prefs }) {
   ];
 
   return (
-    <div className="mt-6 space-y-3">
+    <div className="mt-8">
       {rows.map((r) => (
         <button
           key={r.key}
           type="button"
           onClick={() => toggle(r.key)}
-          className="flex w-full items-center justify-between rounded-xl border border-[var(--cult-line)] px-4 py-3 text-left text-sm"
+          className="flex w-full items-center justify-between border-t border-[var(--cult-line)] py-4 text-left transition hover:bg-[rgba(245,245,242,0.03)]"
         >
-          <span className="text-bone">{r.label}</span>
-          <span className={prefs[r.key] ? "text-matcha" : "text-mist"}>
+          <span className="font-light text-white">{r.label}</span>
+          <span
+            className={`text-[0.62rem] uppercase tracking-[0.18em] ${
+              prefs[r.key] ? "text-white" : "text-warm-grey"
+            }`}
+          >
             {prefs[r.key] ? "On" : "Off"}
           </span>
         </button>
       ))}
-      {msg && <p className="text-xs text-mist">{msg}</p>}
+      {msg && (
+        <p className="mt-3 text-[0.55rem] uppercase tracking-[0.16em] text-warm-grey">
+          {msg}
+        </p>
+      )}
     </div>
   );
 }

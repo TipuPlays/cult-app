@@ -32,21 +32,25 @@ export function RedeemButton({ offeringId }: { offeringId: string }) {
   }
 
   return (
-    <div className="text-right">
+    <div className="shrink-0 text-right">
       <button
         type="button"
         onClick={redeem}
         disabled={pending}
-        className="rounded-full border border-matcha/40 px-4 py-2 text-xs uppercase tracking-wider text-matcha disabled:opacity-50"
+        className="text-[0.62rem] uppercase tracking-[0.22em] text-stone transition hover:text-white disabled:opacity-40"
       >
-        {pending ? "…" : "Redeem"}
+        {pending ? "…" : "Discover →"}
       </button>
       {voucher && (
-        <p className="mt-1 font-mono text-[10px] tracking-wider text-copper">
+        <p className="mt-2 font-mono text-[0.55rem] tracking-[0.14em] text-stone">
           {voucher}
         </p>
       )}
-      {error && <p className="mt-1 text-[10px] text-ember">{error}</p>}
+      {error && (
+        <p className="mt-2 text-[0.55rem] uppercase tracking-[0.12em] text-ember">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

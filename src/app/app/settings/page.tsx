@@ -14,20 +14,29 @@ export default async function SettingsPage() {
   const prefs = await ensureNotificationPrefs(session.user.id);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-lg px-5 pb-16 pt-6">
-      <Link href="/app" className="text-sm text-mist">
-        ← Home
+    <main className="px-6 pt-7">
+      <Link
+        href="/app/profile"
+        className="text-[0.62rem] uppercase tracking-[0.22em] text-warm-grey hover:text-white"
+      >
+        ← You
       </Link>
-      <h1 className="font-display mt-8 text-4xl text-bone">Settings</h1>
-      <ul className="mt-10 space-y-4 text-sm">
-        <li className="flex justify-between border-b border-[var(--cult-line)] py-3">
-          <span className="text-mist">Email</span>
-          <span className="text-bone">{session.user.email}</span>
+      <p className="cult-eyebrow mt-10">Preferences</p>
+      <h1 className="font-display mt-4 text-5xl font-medium text-white">
+        Settings
+      </h1>
+
+      <ul className="mt-12">
+        <li className="flex justify-between border-t border-[var(--cult-line)] py-4">
+          <span className="cult-eyebrow">Email</span>
+          <span className="font-light text-white">{session.user.email}</span>
         </li>
       </ul>
 
-      <h2 className="font-display mt-10 text-2xl text-bone">Notifications</h2>
-      <p className="mt-1 text-sm text-mist">
+      <h2 className="font-display mt-14 text-3xl font-medium text-white">
+        Notifications
+      </h2>
+      <p className="mt-2 text-sm font-light text-warm-grey">
         Mock push via NotifyAdapter — no FCM yet.
       </p>
       <NotifyPrefsForm
@@ -40,26 +49,18 @@ export default async function SettingsPage() {
         }}
       />
 
-      <div className="mt-10 flex flex-col gap-3 text-sm">
-        <Link href="/app/referrals" className="text-matcha">
-          Referrals →
-        </Link>
-        <Link href="/app/events" className="text-matcha">
-          Events →
-        </Link>
-        <Link href="/app/profile" className="text-matcha">
-          Profile →
-        </Link>
-      </div>
       <form
-        className="mt-10"
+        className="mt-14 border-t border-[var(--cult-line)] pt-8"
         action={async () => {
           "use server";
           await signOut({ redirectTo: "/" });
         }}
       >
-        <button type="submit" className="text-sm text-ember">
-          Sign out
+        <button
+          type="submit"
+          className="text-[0.62rem] uppercase tracking-[0.22em] text-ember hover:text-white"
+        >
+          Exit CULT
         </button>
       </form>
     </main>

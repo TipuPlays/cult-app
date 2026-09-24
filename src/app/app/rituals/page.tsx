@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { rituals } from "@/db/schema";
+import { ritualIndex } from "@/lib/design";
 import { CompleteRitualButton } from "./complete-button";
 
 export const metadata = { title: "Rituals" };
@@ -16,31 +17,34 @@ export default async function RitualsPage() {
   const list = await db.select().from(rituals).where(eq(rituals.active, true));
 
   return (
-    <main className="mx-auto min-h-dvh max-w-lg px-5 pb-16 pt-6">
-      <Link href="/app" className="text-sm text-mist">
-        ← Home
-      </Link>
-      <h1 className="font-display mt-8 text-4xl text-bone">Rituals</h1>
-      <p className="mt-2 text-mist">
-        Server-validated. Time windows and visit codes enforced.
+    <main className="px-6 pt-7">
+      <p className="cult-eyebrow">Ceremonies</p>
+      <h1 className="font-display mt-4 text-5xl font-medium leading-none text-white">
+        Rituals
+      </h1>
+      <p className="mt-4 max-w-sm text-sm font-light leading-relaxed text-stone">
+        Invitations to practice. Complete when ready — windows and visit codes
+        are enforced server-side.
       </p>
-      <ul className="mt-8 space-y-4">
-        {list.map((r) => (
-          <li
-            key={r.id}
-            className="rounded-2xl border border-[var(--cult-line)] bg-ink/50 p-5"
-          >
-            <h2 className="text-lg text-bone">{r.name}</h2>
-            <p className="mt-1 text-sm text-mist">{r.description}</p>
-            <p className="mt-2 text-[10px] uppercase tracking-wider text-copper">
-              verify: {r.verifyMode}
+
+      <ul className="mt-14 space-y-6">
+        {list.map((r, i) => (
+          <li key={r.id} className="cult-invite animate-rise">
+            <p className="cult-eyebrow">
+              Ritual {ritualIndex(r.sortOrder, i)}
             </p>
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <p className="text-xs text-copper">
-                {r.verifyMode === "visit_code"
-                  ? "Stamp via Scan → Verify visit"
-                  : `+${r.xpReward} XP${r.creditReward ? ` · +${r.creditReward} cr` : ""}`}
-              </p>
+            <h2 className="font-display mt-5 text-3xl font-medium leading-tight text-white">
+              {r.name}
+            </h2>
+            <p className="mt-4 text-sm font-light leading-relaxed text-warm-grey">
+              {r.description}
+            </p>
+            <p className="cult-meta mt-8 text-stone">
+              {r.verifyMode === "visit_code"
+                ? "Requires visit verification"
+                : `+${r.xpReward} XP${r.creditReward ? ` · +${r.creditReward} credits` : ""}`}
+            </p>
+            <div className="mt-8 flex justify-end">
               <CompleteRitualButton slug={r.slug} verifyMode={r.verifyMode} />
             </div>
           </li>

@@ -31,52 +31,59 @@ function LoginForm() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 py-10">
-      <Link href="/" className="font-display text-xl tracking-[0.2em] text-bone">
+    <main className="mx-auto flex min-h-dvh max-w-md flex-col px-6 py-10">
+      <Link
+        href="/"
+        className="font-display text-2xl font-semibold tracking-[0.3em] text-white"
+      >
         CULT
       </Link>
-      <h1 className="font-display mt-14 text-4xl text-bone">Enter.</h1>
+      <p className="cult-eyebrow mt-20">Threshold</p>
+      <h1 className="font-display mt-4 text-5xl font-medium text-white">
+        Enter.
+      </h1>
       {joined && (
-        <p className="mt-3 text-sm text-matcha">Membership sealed. Sign in to continue.</p>
+        <p className="mt-4 text-sm font-light text-stone">
+          Membership sealed. Sign in to continue.
+        </p>
       )}
-      <form onSubmit={onSubmit} className="mt-10 flex flex-col gap-4">
+      <form onSubmit={onSubmit} className="mt-14 flex flex-col gap-7">
         <label className="block">
-          <span className="mb-1.5 block text-xs uppercase tracking-[0.2em] text-mist">
-            Email
-          </span>
+          <span className="cult-eyebrow mb-2 block">Email</span>
           <input
             name="email"
             type="email"
             required
             defaultValue="member@cult.local"
-            className="w-full rounded-xl border border-[var(--cult-line)] bg-soil/60 px-4 py-3 text-bone outline-none focus:border-matcha/60"
+            className="w-full border-0 border-b border-[var(--cult-line-strong)] bg-transparent px-0 py-3 text-white outline-none focus:border-white"
           />
         </label>
         <label className="block">
-          <span className="mb-1.5 block text-xs uppercase tracking-[0.2em] text-mist">
-            Password
-          </span>
+          <span className="cult-eyebrow mb-2 block">Password</span>
           <input
             name="password"
             type="password"
             required
             minLength={8}
             defaultValue="cultmember1"
-            className="w-full rounded-xl border border-[var(--cult-line)] bg-soil/60 px-4 py-3 text-bone outline-none focus:border-matcha/60"
+            className="w-full border-0 border-b border-[var(--cult-line-strong)] bg-transparent px-0 py-3 text-white outline-none focus:border-white"
           />
         </label>
         {error && <p className="text-sm text-ember">{error}</p>}
         <button
           type="submit"
           disabled={pending}
-          className="mt-2 rounded-full bg-matcha py-3.5 text-sm font-semibold text-void disabled:opacity-60"
+          className="cult-btn mt-4 disabled:opacity-50"
         >
           {pending ? "Opening…" : "Enter CULT"}
         </button>
       </form>
-      <p className="mt-6 text-sm text-mist">
+      <p className="mt-12 text-sm font-light text-warm-grey">
         New?{" "}
-        <Link href="/join" className="text-bone underline-offset-2 hover:underline">
+        <Link
+          href="/join"
+          className="text-white underline-offset-4 hover:underline"
+        >
           Request membership
         </Link>
       </p>
