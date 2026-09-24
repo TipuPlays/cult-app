@@ -80,11 +80,13 @@ export function scoreReceiptFraud(input: {
   contentHash: string | null;
   duplicateHashToday: boolean;
   confidence: number;
+  sameDaySameAmount?: boolean;
 }): number {
   let score = 0;
   if (input.amountCents == null) score += 30;
   if ((input.amountCents ?? 0) > 20000) score += 25;
   if (input.duplicateHashToday) score += 40;
+  if (input.sameDaySameAmount) score += 25;
   if (input.confidence < 0.5) score += 20;
   return Math.min(100, score);
 }

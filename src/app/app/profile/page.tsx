@@ -42,11 +42,22 @@ export default async function ProfilePage() {
           <dd className="tracking-widest text-bone">{member?.joinCode}</dd>
         </div>
       </dl>
-      {(session.user.role === "admin" || session.user.role === "staff") && (
-        <Link href="/admin" className="mt-8 inline-block text-matcha">
-          Admin console →
+      <div className="mt-8 flex flex-col gap-3 text-sm">
+        <Link href="/app/passport" className="text-matcha">
+          Passport →
         </Link>
-      )}
+        <Link href="/app/activity" className="text-matcha">
+          Activity →
+        </Link>
+        <Link href="/app/settings" className="text-matcha">
+          Settings →
+        </Link>
+        {(session.user.role === "admin" || session.user.role === "staff") && (
+          <Link href="/admin" className="text-matcha">
+            Admin console →
+          </Link>
+        )}
+      </div>
       <form
         className="mt-10"
         action={async () => {

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { desc } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { auditEvents, members, receipts } from "@/db/schema";
+import { auditEvents, levels, members, receipts } from "@/db/schema";
 
 export const metadata = { title: "Admin" };
 export const dynamic = "force-dynamic";
@@ -15,13 +15,15 @@ export default async function AdminPage() {
     redirect("/app");
   }
 
-  const memberCount = await db.select().from(members);
-  const pendingReceipts = await db.select().from(receipts).limit(20);
-  const audits = await db
-    .select()
-    .from(auditEvents)
-    .orderBy(desc(auditEvents.createdAt))
-    .limit(15);
+  const [memberRows, queue, levelRows, audits] = await Promise.all([
+    db.select().from(members),
+    db
+      .select()
+      .from(receipts)
+      .where(eq(receipts.status, "manual_review")),
+    db.select().from(levels).orderBy(asc(levels.rank)),
+    db.select().from(auditEvents).orderBy(desc(auditEvents.createdAt)).limit(15),
+  ]);
 
   return (
     <main className="mx-auto min-h-dvh max-w-3xl px-5 py-10">
@@ -37,22 +39,29 @@ export default async function AdminPage() {
       <p className="mt-2 text-mist">Server RBAC · {session.user.role}</p>
 
       <section className="mt-10 grid gap-4 sm:grid-cols-3">
-        <AdminStat label="Members" value={String(memberCount.length)} />
-        <AdminStat
-          label="Receipts"
-          value={String(pendingReceipts.length)}
-        />
-        <AdminStat label="Audit rows" value={String(audits.length)} />
+        <AdminStat label="Members" value={String(memberRows.length)} />
+        <AdminStat label="Review queue" value={String(queue.length)} />
+        <AdminStat label="Levels" value={String(levelRows.length)} />
       </section>
 
       <section className="mt-12">
         <h2 className="font-display text-2xl text-bone">Sections</h2>
-        <ul className="mt-4 space-y-2 text-sm text-mist">
-          <li>Members — list + status (next)</li>
-          <li>Levels — read from `/api/levels`</li>
-          <li>Receipt queue — approve/reject (next)</li>
-          <li>Rituals / offerings — manage (next)</li>
-          <li>Audit feed — below</li>
+        <ul className="mt-4 space-y-3 text-sm">
+          <li>
+            <Link href="/admin/members" className="text-matcha hover:underline">
+              Members →
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/receipts" className="text-matcha hover:underline">
+              Receipt queue →
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/levels" className="text-matcha hover:underline">
+              Levels →
+            </Link>
+          </li>
         </ul>
       </section>
 

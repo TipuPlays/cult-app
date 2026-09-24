@@ -11,9 +11,9 @@ export const dynamic = "force-dynamic";
 const NAV = [
   { href: "/app", label: "Home" },
   { href: "/app/rituals", label: "Rituals" },
-  { href: "/app/passport", label: "Passport" },
   { href: "/app/offerings", label: "Offerings" },
   { href: "/app/scan", label: "Scan" },
+  { href: "/app/activity", label: "Activity" },
   { href: "/app/profile", label: "Profile" },
 ] as const;
 

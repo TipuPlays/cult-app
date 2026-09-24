@@ -20,12 +20,19 @@ export const memberStatusEnum = pgEnum("member_status", [
 ]);
 export const receiptStatusEnum = pgEnum("receipt_status", [
   "pending",
+  "processing",
+  "manual_review",
   "approved",
   "rejected",
 ]);
 export const offeringStatusEnum = pgEnum("offering_status", [
   "active",
   "archived",
+]);
+export const voucherStatusEnum = pgEnum("voucher_status", [
+  "issued",
+  "redeemed",
+  "void",
 ]);
 
 export const users = pgTable("users", {
@@ -189,6 +196,8 @@ export const redemptions = pgTable(
       .notNull()
       .references(() => members.id, { onDelete: "cascade" }),
     creditSpent: integer("credit_spent").notNull(),
+    voucherCode: varchar("voucher_code", { length: 32 }).notNull().unique(),
+    voucherStatus: voucherStatusEnum("voucher_status").notNull().default("issued"),
     idempotencyKey: varchar("idempotency_key", { length: 128 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -214,6 +223,14 @@ export const receipts = pgTable(
     status: receiptStatusEnum("status").notNull().default("pending"),
     fraudScore: integer("fraud_score").notNull().default(0),
     contentHash: varchar("content_hash", { length: 128 }),
+    fingerprint: jsonb("fingerprint").$type<{
+      contentHash: string;
+      amountCents: number | null;
+      merchantNorm: string | null;
+      dayKey: string | null;
+    }>(),
+    xpAwarded: integer("xp_awarded").notNull().default(0),
+    creditsAwarded: integer("credits_awarded").notNull().default(0),
     reviewNote: text("review_note"),
     reviewedBy: uuid("reviewed_by").references(() => users.id),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
@@ -225,6 +242,7 @@ export const receipts = pgTable(
   (t) => [
     uniqueIndex("receipt_idem_uidx").on(t.memberId, t.idempotencyKey),
     index("receipts_status_idx").on(t.status),
+    index("receipts_hash_idx").on(t.contentHash),
   ],
 );
 
