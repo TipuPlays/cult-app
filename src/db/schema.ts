@@ -46,6 +46,22 @@ export const ritualVerifyEnum = pgEnum("ritual_verify", [
   "visit_code",
   "time_window",
 ]);
+export const fraudStatusEnum = pgEnum("fraud_status", [
+  "open",
+  "reviewing",
+  "dismissed",
+  "confirmed",
+]);
+export const rsvpStatusEnum = pgEnum("rsvp_status", [
+  "going",
+  "waitlist",
+  "cancelled",
+]);
+export const referralClaimStatusEnum = pgEnum("referral_claim_status", [
+  "pending",
+  "rewarded",
+  "rejected",
+]);
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -346,6 +362,194 @@ export const passportStamps = pgTable(
     uniqueIndex("passport_stamp_once_uidx").on(t.memberId, t.stampSlug),
     index("passport_stamps_member_idx").on(t.memberId),
   ],
+);
+
+export const referralCodes = pgTable(
+  "referral_codes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" })
+      .unique(),
+    code: varchar("code", { length: 16 }).notNull().unique(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("referral_codes_code_idx").on(t.code)],
+);
+
+export const referralClaims = pgTable(
+  "referral_claims",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    codeId: uuid("code_id")
+      .notNull()
+      .references(() => referralCodes.id),
+    referrerMemberId: uuid("referrer_member_id")
+      .notNull()
+      .references(() => members.id),
+    refereeMemberId: uuid("referee_member_id")
+      .notNull()
+      .references(() => members.id)
+      .unique(),
+    status: referralClaimStatusEnum("status").notNull().default("rewarded"),
+    referrerXp: integer("referrer_xp").notNull().default(0),
+    referrerCredits: integer("referrer_credits").notNull().default(0),
+    refereeXp: integer("referee_xp").notNull().default(0),
+    refereeCredits: integer("referee_credits").notNull().default(0),
+    idempotencyKey: varchar("idempotency_key", { length: 128 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("referral_claim_idem_uidx").on(
+      t.refereeMemberId,
+      t.idempotencyKey,
+    ),
+    index("referral_claims_referrer_idx").on(t.referrerMemberId),
+  ],
+);
+
+export const cultEvents = pgTable(
+  "cult_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    slug: varchar("slug", { length: 80 }).notNull().unique(),
+    title: varchar("title", { length: 160 }).notNull(),
+    description: text("description").notNull(),
+    location: varchar("location", { length: 160 }),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    minLevelRank: integer("min_level_rank").notNull().default(1),
+    capacity: integer("capacity"),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("cult_events_starts_idx").on(t.startsAt)],
+);
+
+export const eventRsvps = pgTable(
+  "event_rsvps",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => cultEvents.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    status: rsvpStatusEnum("status").notNull().default("going"),
+    idempotencyKey: varchar("idempotency_key", { length: 128 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("event_rsvp_member_uidx").on(t.eventId, t.memberId),
+    uniqueIndex("event_rsvp_idem_uidx").on(t.memberId, t.idempotencyKey),
+  ],
+);
+
+export const badgeDefs = pgTable("badge_defs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  slug: varchar("slug", { length: 64 }).notNull().unique(),
+  name: varchar("name", { length: 120 }).notNull(),
+  description: text("description").notNull(),
+  criteria: jsonb("criteria")
+    .$type<{
+      type: "stamp_count" | "level_rank" | "ritual_count" | "visit_count" | "manual";
+      threshold?: number;
+    }>()
+    .notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const memberBadges = pgTable(
+  "member_badges",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    badgeId: uuid("badge_id")
+      .notNull()
+      .references(() => badgeDefs.id, { onDelete: "cascade" }),
+    source: varchar("source", { length: 64 }).notNull(),
+    awardedAt: timestamp("awarded_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("member_badge_uidx").on(t.memberId, t.badgeId),
+    index("member_badges_member_idx").on(t.memberId),
+  ],
+);
+
+export const fraudFlags = pgTable(
+  "fraud_flags",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    memberId: uuid("member_id").references(() => members.id, {
+      onDelete: "set null",
+    }),
+    kind: varchar("kind", { length: 64 }).notNull(),
+    severity: integer("severity").notNull().default(50),
+    status: fraudStatusEnum("status").notNull().default("open"),
+    payload: jsonb("payload").$type<Record<string, unknown>>().default({}),
+    resolvedBy: uuid("resolved_by").references(() => users.id),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("fraud_flags_status_idx").on(t.status),
+    index("fraud_flags_member_idx").on(t.memberId),
+  ],
+);
+
+export const notificationPrefs = pgTable("notification_prefs", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "cascade" }),
+  pushEnabled: boolean("push_enabled").notNull().default(true),
+  emailEnabled: boolean("email_enabled").notNull().default(true),
+  ritualReminders: boolean("ritual_reminders").notNull().default(true),
+  eventReminders: boolean("event_reminders").notNull().default(true),
+  rewardAlerts: boolean("reward_alerts").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const notificationLog = pgTable(
+  "notification_log",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    template: varchar("template", { length: 120 }).notNull(),
+    channel: varchar("channel", { length: 32 }).notNull().default("push_mock"),
+    payload: jsonb("payload").$type<Record<string, unknown>>().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("notification_log_user_idx").on(t.userId)],
 );
 
 export type User = typeof users.$inferSelect;

@@ -8,8 +8,11 @@ import {
   offerings,
   rituals,
   users,
+  badgeDefs,
+  cultEvents,
 } from "@/db/schema";
 import type { AppRole } from "@/lib/rbac";
+import { ensureReferralCode } from "@/lib/referrals";
 
 const LEVEL_DEFS = [
   { rank: 1, slug: "initiate", name: "Initiate", xp: 0, mark: "I" },
@@ -193,6 +196,67 @@ async function seedOfferings() {
   }
 }
 
+async function seedBadges() {
+  const defs = [
+    {
+      slug: "first-stamp",
+      name: "First Stamp",
+      description: "Collect your first passport stamp.",
+      criteria: { type: "stamp_count" as const, threshold: 1 },
+    },
+    {
+      slug: "wanderer",
+      name: "Wanderer",
+      description: "Three verified visits.",
+      criteria: { type: "visit_count" as const, threshold: 3 },
+    },
+    {
+      slug: "ritualist",
+      name: "Ritualist",
+      description: "Complete three rituals.",
+      criteria: { type: "ritual_count" as const, threshold: 3 },
+    },
+    {
+      slug: "ember-risen",
+      name: "Ember Risen",
+      description: "Reach Ember (level 2).",
+      criteria: { type: "level_rank" as const, threshold: 2 },
+    },
+  ];
+  for (const d of defs) {
+    const existing = await db
+      .select()
+      .from(badgeDefs)
+      .where(eq(badgeDefs.slug, d.slug))
+      .limit(1);
+    if (existing[0]) continue;
+    await db.insert(badgeDefs).values(d);
+  }
+}
+
+async function seedEvents() {
+  const slug = "steam-circle";
+  const existing = await db
+    .select()
+    .from(cultEvents)
+    .where(eq(cultEvents.slug, slug))
+    .limit(1);
+  if (existing[0]) return;
+  const starts = new Date();
+  starts.setDate(starts.getDate() + 7);
+  starts.setHours(18, 0, 0, 0);
+  await db.insert(cultEvents).values({
+    slug,
+    title: "Steam Circle",
+    description: "Quiet cupping for members — Initiate and above.",
+    location: "CULT Flagship",
+    startsAt: starts,
+    minLevelRank: 1,
+    capacity: 20,
+    active: true,
+  });
+}
+
 async function main() {
   console.log("Seeding CULT…");
   await seedLevels();
@@ -217,20 +281,44 @@ async function main() {
     role: "analyst",
     displayName: "Analyst",
   });
-  await upsertUser({
+  const member = await upsertUser({
     email: "member@cult.local",
     name: "Ava Ember",
     password: "cultmember1",
     role: "member",
     displayName: "Ava",
   });
+  const member2 = await upsertUser({
+    email: "member2@cult.local",
+    name: "Kai Steam",
+    password: "cultmember2",
+    role: "member",
+    displayName: "Kai",
+  });
   await seedRituals();
   await seedOfferings();
+  await seedBadges();
+  await seedEvents();
+
+  const [m1] = await db
+    .select()
+    .from(members)
+    .where(eq(members.userId, member.id))
+    .limit(1);
+  const [m2] = await db
+    .select()
+    .from(members)
+    .where(eq(members.userId, member2.id))
+    .limit(1);
+  if (m1) await ensureReferralCode(m1.id);
+  if (m2) await ensureReferralCode(m2.id);
+
   console.log("Done.");
   console.log("  admin@cult.local / cultadmin1 (super_admin)");
   console.log("  manager@cult.local / cultmanager1");
-  console.log("  analyst@cult.local / cultanalyst1 (read-only admin)");
+  console.log("  analyst@cult.local / cultanalyst1");
   console.log("  member@cult.local / cultmember1");
+  console.log("  member2@cult.local / cultmember2");
   process.exit(0);
 }
 

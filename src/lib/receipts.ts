@@ -197,6 +197,20 @@ export async function submitReceipt(input: SubmitReceiptInput) {
     payload: { fraudScore, status: nextStatus },
   });
 
+  if (dupes[0] || fraudScore >= 60) {
+    const { raiseFraudFlag } = await import("@/lib/analytics");
+    await raiseFraudFlag({
+      memberId: input.memberId,
+      kind: dupes[0] ? "receipt_duplicate" : "receipt_high_score",
+      severity: Math.max(fraudScore, dupes[0] ? 85 : fraudScore),
+      payload: {
+        receiptId: created.id,
+        contentHash,
+        fraudScore,
+      },
+    });
+  }
+
   return { receipt: processed, replayed: false as const };
 }
 

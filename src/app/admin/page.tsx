@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { auditEvents, levels, members, receipts } from "@/db/schema";
 import { requireStaffPage } from "@/lib/admin-page";
@@ -29,26 +29,15 @@ export default async function AdminPage() {
   ]);
 
   const links = [
-    {
-      href: "/admin/members",
-      label: "Members",
-      show: hasPermission(role, Permission.MEMBERS_READ),
-    },
-    {
-      href: "/admin/receipts",
-      label: "Receipt queue",
-      show: hasPermission(role, Permission.RECEIPTS_REVIEW),
-    },
-    {
-      href: "/admin/levels",
-      label: "Levels",
-      show: hasPermission(role, Permission.LEVELS_READ),
-    },
-    {
-      href: "/admin/grants",
-      label: "Grant / adjust",
-      show: hasPermission(role, Permission.GRANTS_WRITE),
-    },
+    { href: "/admin/members", label: "Members", show: hasPermission(role, Permission.MEMBERS_READ) },
+    { href: "/admin/receipts", label: "Receipt queue", show: hasPermission(role, Permission.RECEIPTS_REVIEW) },
+    { href: "/admin/fraud", label: "Fraud queue", show: hasPermission(role, Permission.FRAUD_REVIEW) },
+    { href: "/admin/grants", label: "Grant / adjust", show: hasPermission(role, Permission.GRANTS_WRITE) },
+    { href: "/admin/events", label: "Events", show: hasPermission(role, Permission.EVENTS_WRITE) },
+    { href: "/admin/referrals", label: "Referrals", show: hasPermission(role, Permission.REFERRALS_READ) },
+    { href: "/admin/analytics", label: "Analytics", show: hasPermission(role, Permission.ANALYTICS_READ) },
+    { href: "/admin/levels", label: "Levels", show: hasPermission(role, Permission.LEVELS_READ) },
+    { href: "/admin/roles", label: "Roles", show: hasPermission(role, Permission.ROLES_WRITE) },
   ].filter((l) => l.show);
 
   return (

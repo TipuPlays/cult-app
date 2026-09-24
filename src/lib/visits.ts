@@ -154,5 +154,16 @@ export async function verifyVisit(input: VerifyVisitInput) {
     });
 
     return { visit, stamp, replayed: false as const };
+  }).then(async (result) => {
+    if (!result.replayed) {
+      const { evaluateBadges } = await import("@/lib/badges");
+      const { notifyUser } = await import("@/lib/notifications");
+      await evaluateBadges(input.memberId, "visit");
+      await notifyUser(input.userId, "visit_reward", {
+        visitId: result.visit.id,
+        location: result.visit.locationName,
+      });
+    }
+    return result;
   });
 }
