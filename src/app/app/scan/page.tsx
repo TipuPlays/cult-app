@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { receipts } from "@/db/schema";
 import { ReceiptUploadForm } from "./upload-form";
+import { VisitVerifyForm } from "./visit-form";
 
 export const metadata = { title: "Scan" };
 export const dynamic = "force-dynamic";
@@ -27,9 +28,19 @@ export default async function ScanPage() {
       </Link>
       <h1 className="font-display mt-8 text-4xl text-bone">Scan</h1>
       <p className="mt-3 text-mist">
-        Upload → processing → review. Awards land only when approved.
+        Receipts for review · visit codes for passport stamps.
       </p>
-      <ReceiptUploadForm />
+
+      <section className="mt-10 rounded-2xl border border-[var(--cult-line)] bg-ink/40 p-5">
+        <h2 className="font-display text-xl text-bone">Verify visit</h2>
+        <VisitVerifyForm />
+      </section>
+
+      <section className="mt-10">
+        <h2 className="font-display text-xl text-bone">Upload receipt</h2>
+        <ReceiptUploadForm />
+      </section>
+
       <section className="mt-12">
         <h2 className="font-display text-2xl text-bone">Your receipts</h2>
         <ul className="mt-4 space-y-3">

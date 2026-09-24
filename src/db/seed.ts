@@ -9,6 +9,7 @@ import {
   rituals,
   users,
 } from "@/db/schema";
+import type { AppRole } from "@/lib/rbac";
 
 const LEVEL_DEFS = [
   { rank: 1, slug: "initiate", name: "Initiate", xp: 0, mark: "I" },
@@ -48,7 +49,7 @@ async function upsertUser(opts: {
   email: string;
   name: string;
   password: string;
-  role: "member" | "admin" | "staff";
+  role: AppRole;
   displayName: string;
 }) {
   const email = opts.email.toLowerCase();
@@ -57,7 +58,15 @@ async function upsertUser(opts: {
     .from(users)
     .where(eq(users.email, email))
     .limit(1);
-  if (existing[0]) return existing[0];
+  if (existing[0]) {
+    if (existing[0].role !== opts.role) {
+      await db
+        .update(users)
+        .set({ role: opts.role })
+        .where(eq(users.id, existing[0].id));
+    }
+    return existing[0];
+  }
 
   const passwordHash = await hash(opts.password, 12);
   const [user] = await db
@@ -82,7 +91,7 @@ async function upsertUser(opts: {
     joinCode: nanoid(8).toUpperCase(),
     currentLevelId: level1?.id,
     xpBalance: 0,
-    creditBalance: opts.role === "admin" ? 0 : 50,
+    creditBalance: opts.role === "member" ? 50 : 0,
   });
 
   return user;
@@ -93,11 +102,13 @@ async function seedRituals() {
     {
       slug: "morning-steam",
       name: "Morning Steam",
-      description: "Log your first cup before noon.",
+      description: "Log your first cup before noon (server time-window check).",
       xpReward: 25,
       creditReward: 0,
       cooldownHours: 20,
       sortOrder: 1,
+      verifyMode: "time_window" as const,
+      beforeHour: 12,
     },
     {
       slug: "matcha-stillness",
@@ -107,15 +118,19 @@ async function seedRituals() {
       creditReward: 5,
       cooldownHours: 24,
       sortOrder: 2,
+      verifyMode: "none" as const,
+      beforeHour: null,
     },
     {
       slug: "flagship-visit",
       name: "Flagship Visit",
-      description: "Check in at a CULT space.",
-      xpReward: 60,
-      creditReward: 10,
+      description: "Enter a CULT visit code from the space.",
+      xpReward: 0,
+      creditReward: 0,
       cooldownHours: 12,
       sortOrder: 3,
+      verifyMode: "visit_code" as const,
+      beforeHour: null,
     },
   ];
 
@@ -125,7 +140,19 @@ async function seedRituals() {
       .from(rituals)
       .where(eq(rituals.slug, r.slug))
       .limit(1);
-    if (existing[0]) continue;
+    if (existing[0]) {
+      await db
+        .update(rituals)
+        .set({
+          verifyMode: r.verifyMode,
+          beforeHour: r.beforeHour,
+          xpReward: r.xpReward,
+          creditReward: r.creditReward,
+          description: r.description,
+        })
+        .where(eq(rituals.id, existing[0].id));
+      continue;
+    }
     await db.insert(rituals).values(r);
   }
 }
@@ -171,10 +198,24 @@ async function main() {
   await seedLevels();
   await upsertUser({
     email: "admin@cult.local",
-    name: "CULT Admin",
+    name: "CULT Super Admin",
     password: "cultadmin1",
-    role: "admin",
+    role: "super_admin",
     displayName: "Keeper",
+  });
+  await upsertUser({
+    email: "manager@cult.local",
+    name: "CULT Manager",
+    password: "cultmanager1",
+    role: "manager",
+    displayName: "Manager",
+  });
+  await upsertUser({
+    email: "analyst@cult.local",
+    name: "CULT Analyst",
+    password: "cultanalyst1",
+    role: "analyst",
+    displayName: "Analyst",
   });
   await upsertUser({
     email: "member@cult.local",
@@ -186,7 +227,9 @@ async function main() {
   await seedRituals();
   await seedOfferings();
   console.log("Done.");
-  console.log("  admin@cult.local / cultadmin1");
+  console.log("  admin@cult.local / cultadmin1 (super_admin)");
+  console.log("  manager@cult.local / cultmanager1");
+  console.log("  analyst@cult.local / cultanalyst1 (read-only admin)");
   console.log("  member@cult.local / cultmember1");
   process.exit(0);
 }

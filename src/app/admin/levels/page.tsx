@@ -1,19 +1,15 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { asc } from "drizzle-orm";
-import { auth } from "@/auth";
 import { db } from "@/db";
 import { levels } from "@/db/schema";
+import { requireStaffPage } from "@/lib/admin-page";
+import { Permission } from "@/lib/rbac";
 
 export const metadata = { title: "Levels" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminLevelsPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-  if (session.user.role !== "admin" && session.user.role !== "staff") {
-    redirect("/app");
-  }
+  await requireStaffPage(Permission.LEVELS_READ);
 
   const rows = await db.select().from(levels).orderBy(asc(levels.rank));
 

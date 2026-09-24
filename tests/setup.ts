@@ -6,3 +6,5 @@ if (!process.env.DATABASE_URL) {
 if (!process.env.AUTH_SECRET) {
   process.env.AUTH_SECRET = "test-secret-cult-phase1-hardening";
 }
+process.env.BLOB_STORAGE = "memory";
+

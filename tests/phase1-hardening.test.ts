@@ -312,9 +312,9 @@ describe("client XP tampering blocked at domain layer", () => {
 });
 
 describe("admin authz helper", () => {
-  it("seeded admin has admin role; member does not", async () => {
+  it("seeded admin is staff super_admin; member is not", async () => {
     const { user, admin } = await memberFixture();
-    expect(admin.role).toBe("admin");
+    expect(admin.role).toBe("super_admin");
     expect(user.role).toBe("member");
   });
 });

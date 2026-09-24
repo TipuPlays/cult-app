@@ -15,7 +15,11 @@ pnpm dev
 Demo users (after seed):
 
 - `member@cult.local` / `cultmember1`
-- `admin@cult.local` / `cultadmin1`
+- `admin@cult.local` / `cultadmin1` (`super_admin`)
+- `manager@cult.local` / `cultmanager1`
+- `analyst@cult.local` / `cultanalyst1` (read-only admin)
+
+Visit codes (dev): `CULTHQ`, `MATCHA01`, `ORIGINLAB`
 
 ## Notes
 

@@ -7,6 +7,7 @@ import {
   scoreReceiptFraud,
   type OcrResult,
 } from "@/lib/adapters";
+import { blobStorage } from "@/lib/blob-storage";
 import {
   awardXpInTx,
   LedgerError,
@@ -76,9 +77,10 @@ export async function submitReceipt(input: SubmitReceiptInput) {
     )
     .limit(1);
 
-  // Store as data URL for Phase 1 (swap for object storage later)
-  const b64 = Buffer.from(input.imageBytes).toString("base64");
-  const imageUrl = `data:${input.mimeType};base64,${b64.slice(0, 200)}…`; // truncate display blob
+  // Store via blob adapter (local/mock — swap for S3/R2)
+  const stored = await blobStorage.put(input.imageBytes, input.mimeType, {
+    prefix: "receipts",
+  });
 
   const [created] = await db
     .insert(receipts)
@@ -86,7 +88,8 @@ export async function submitReceipt(input: SubmitReceiptInput) {
       memberId: input.memberId,
       idempotencyKey: input.idempotencyKey,
       contentHash,
-      imageUrl,
+      imageUrl: stored.url,
+      blobKey: stored.key,
       status: "pending",
       fingerprint: {
         contentHash,

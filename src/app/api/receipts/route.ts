@@ -11,6 +11,7 @@ import {
 } from "@/lib/idempotency";
 import { LedgerError } from "@/lib/ledgers";
 import { submitReceipt } from "@/lib/receipts";
+import { RATE, rateLimit, rateLimitedResponse } from "@/lib/rate-limit";
 
 export async function GET() {
   const { session, error } = await requireMember();
@@ -41,6 +42,12 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const { session, error } = await requireMember();
   if (error) return error;
+
+  const rl = rateLimit({
+    key: `receipts:${session!.user.id}`,
+    ...RATE.receipts,
+  });
+  if (!rl.ok) return rateLimitedResponse(rl.retryAfterSec);
 
   const key = requireIdempotencyKey(req);
   if (!key) return missingIdempotencyResponse();

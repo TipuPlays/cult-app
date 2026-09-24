@@ -1,20 +1,16 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { desc, eq, inArray } from "drizzle-orm";
-import { auth } from "@/auth";
 import { db } from "@/db";
 import { members, receipts, users } from "@/db/schema";
+import { requireStaffPage } from "@/lib/admin-page";
+import { Permission } from "@/lib/rbac";
 import { ReviewActions } from "./review-actions";
 
 export const metadata = { title: "Receipt queue" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminReceiptsPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-  if (session.user.role !== "admin" && session.user.role !== "staff") {
-    redirect("/app");
-  }
+  await requireStaffPage(Permission.RECEIPTS_REVIEW);
 
   const rows = await db
     .select({

@@ -12,7 +12,14 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["member", "staff", "admin"]);
+export const userRoleEnum = pgEnum("user_role", [
+  "member",
+  "analyst",
+  "staff",
+  "manager",
+  "admin",
+  "super_admin",
+]);
 export const memberStatusEnum = pgEnum("member_status", [
   "active",
   "paused",
@@ -33,6 +40,11 @@ export const voucherStatusEnum = pgEnum("voucher_status", [
   "issued",
   "redeemed",
   "void",
+]);
+export const ritualVerifyEnum = pgEnum("ritual_verify", [
+  "none",
+  "visit_code",
+  "time_window",
 ]);
 
 export const users = pgTable("users", {
@@ -143,6 +155,9 @@ export const rituals = pgTable("rituals", {
   xpReward: integer("xp_reward").notNull().default(0),
   creditReward: integer("credit_reward").notNull().default(0),
   cooldownHours: integer("cooldown_hours").notNull().default(24),
+  verifyMode: ritualVerifyEnum("verify_mode").notNull().default("none"),
+  /** For time_window: local hour end (0-23), morning rituals use beforeHour */
+  beforeHour: integer("before_hour"),
   active: boolean("active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -161,6 +176,9 @@ export const ritualCompletions = pgTable(
       .notNull()
       .references(() => members.id, { onDelete: "cascade" }),
     idempotencyKey: varchar("idempotency_key", { length: 128 }).notNull(),
+    verificationPayload: jsonb("verification_payload").$type<
+      Record<string, unknown>
+    >(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -216,6 +234,7 @@ export const receipts = pgTable(
       .notNull()
       .references(() => members.id, { onDelete: "cascade" }),
     imageUrl: text("image_url"),
+    blobKey: varchar("blob_key", { length: 255 }),
     ocrPayload: jsonb("ocr_payload").$type<Record<string, unknown>>(),
     amountCents: integer("amount_cents"),
     merchant: varchar("merchant", { length: 255 }),
@@ -278,6 +297,55 @@ export const auditEvents = pgTable(
       .defaultNow(),
   },
   (t) => [index("audit_created_idx").on(t.createdAt)],
+);
+
+/** Verified flagship / partner visits → passport stamps */
+export const visits = pgTable(
+  "visits",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    locationCode: varchar("location_code", { length: 64 }).notNull(),
+    locationName: varchar("location_name", { length: 120 }).notNull(),
+    stampSlug: varchar("stamp_slug", { length: 64 }).notNull(),
+    xpAwarded: integer("xp_awarded").notNull().default(0),
+    creditsAwarded: integer("credits_awarded").notNull().default(0),
+    idempotencyKey: varchar("idempotency_key", { length: 128 }).notNull(),
+    verifiedAt: timestamp("verified_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("visit_idem_uidx").on(t.memberId, t.idempotencyKey),
+    index("visits_member_idx").on(t.memberId),
+  ],
+);
+
+export const passportStamps = pgTable(
+  "passport_stamps",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    visitId: uuid("visit_id").references(() => visits.id, {
+      onDelete: "set null",
+    }),
+    stampSlug: varchar("stamp_slug", { length: 64 }).notNull(),
+    label: varchar("label", { length: 120 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("passport_stamp_once_uidx").on(t.memberId, t.stampSlug),
+    index("passport_stamps_member_idx").on(t.memberId),
+  ],
 );
 
 export type User = typeof users.$inferSelect;

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { auth, signOut } from "@/auth";
 import { db } from "@/db";
-import { levels, members, rituals } from "@/db/schema";
+import { levels, members, passportStamps, rituals } from "@/db/schema";
 
 export const metadata = { title: "Home" };
 export const dynamic = "force-dynamic";
@@ -39,6 +39,11 @@ export default async function AppHomePage() {
     level = row;
   }
 
+  const [stampCount] = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(passportStamps)
+    .where(eq(passportStamps.memberId, member.id));
+
   const activeRituals = await db
     .select()
     .from(rituals)
@@ -65,15 +70,22 @@ export default async function AppHomePage() {
       </header>
 
       <section className="animate-rise mt-10 overflow-hidden rounded-[1.75rem] border border-[var(--cult-line)] bg-gradient-to-br from-soil/80 to-void p-6">
-        <p className="text-xs uppercase tracking-[0.3em] text-copper">Passport</p>
+        <div className="flex items-start justify-between">
+          <p className="text-xs uppercase tracking-[0.3em] text-copper">Passport</p>
+          <Link href="/app/passport" className="text-xs text-matcha">
+            Open →
+          </Link>
+        </div>
         <h1 className="font-display mt-3 text-3xl text-bone">
           {level?.name ?? "Initiate"}
         </h1>
         <p className="mt-1 text-sm text-mist">
-          Level mark{" "}
+          Mark{" "}
           <span className="text-bone">
             {(level?.visualMeta as { mark?: string } | null)?.mark ?? "I"}
           </span>
+          {" · "}
+          {stampCount?.c ?? 0} stamps
         </p>
         <div className="mt-8 grid grid-cols-2 gap-4">
           <Stat label="XP" value={String(member.xpBalance)} />
@@ -82,6 +94,11 @@ export default async function AppHomePage() {
         <p className="mt-6 text-xs text-mist">
           Code <span className="tracking-widest text-bone">{member.joinCode}</span>
         </p>
+      </section>
+
+      <section className="animate-rise-delay mt-6 grid grid-cols-2 gap-3">
+        <QuickLink href="/app/scan" label="Verify visit" sub="Stamp + XP" />
+        <QuickLink href="/app/rituals" label="Rituals" sub="Daily practice" />
       </section>
 
       <section className="animate-rise-delay mt-10">
@@ -100,8 +117,10 @@ export default async function AppHomePage() {
               <p className="text-bone">{r.name}</p>
               <p className="mt-1 text-sm text-mist">{r.description}</p>
               <p className="mt-2 text-xs text-copper">
-                +{r.xpReward} XP
-                {r.creditReward > 0 ? ` · +${r.creditReward} credits` : ""}
+                {r.verifyMode !== "none" ? `${r.verifyMode} · ` : ""}
+                {r.verifyMode === "visit_code"
+                  ? "awards via visit verify"
+                  : `+${r.xpReward} XP${r.creditReward > 0 ? ` · +${r.creditReward} cr` : ""}`}
               </p>
             </li>
           ))}
@@ -132,5 +151,25 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] uppercase tracking-[0.25em] text-mist">{label}</p>
       <p className="mt-1 font-display text-2xl tabular-nums text-bone">{value}</p>
     </div>
+  );
+}
+
+function QuickLink({
+  href,
+  label,
+  sub,
+}: {
+  href: string;
+  label: string;
+  sub: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="rounded-2xl border border-[var(--cult-line)] bg-ink/30 px-4 py-4 transition hover:border-matcha/40"
+    >
+      <p className="text-sm text-bone">{label}</p>
+      <p className="mt-1 text-xs text-mist">{sub}</p>
+    </Link>
   );
 }

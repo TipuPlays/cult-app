@@ -21,7 +21,9 @@ export default async function RitualsPage() {
         ← Home
       </Link>
       <h1 className="font-display mt-8 text-4xl text-bone">Rituals</h1>
-      <p className="mt-2 text-mist">Server-validated. Cooldowns enforced.</p>
+      <p className="mt-2 text-mist">
+        Server-validated. Time windows and visit codes enforced.
+      </p>
       <ul className="mt-8 space-y-4">
         {list.map((r) => (
           <li
@@ -30,12 +32,16 @@ export default async function RitualsPage() {
           >
             <h2 className="text-lg text-bone">{r.name}</h2>
             <p className="mt-1 text-sm text-mist">{r.description}</p>
+            <p className="mt-2 text-[10px] uppercase tracking-wider text-copper">
+              verify: {r.verifyMode}
+            </p>
             <div className="mt-4 flex items-center justify-between gap-3">
               <p className="text-xs text-copper">
-                +{r.xpReward} XP
-                {r.creditReward ? ` · +${r.creditReward} cr` : ""}
+                {r.verifyMode === "visit_code"
+                  ? "Stamp via Scan → Verify visit"
+                  : `+${r.xpReward} XP${r.creditReward ? ` · +${r.creditReward} cr` : ""}`}
               </p>
-              <CompleteRitualButton slug={r.slug} />
+              <CompleteRitualButton slug={r.slug} verifyMode={r.verifyMode} />
             </div>
           </li>
         ))}

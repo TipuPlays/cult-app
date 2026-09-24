@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
+import { isStaffRole } from "@/lib/rbac";
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -16,7 +17,7 @@ export default auth((req) => {
     return NextResponse.redirect(url);
   }
 
-  if (isAdminArea && role !== "admin" && role !== "staff") {
+  if (isAdminArea && !isStaffRole(role)) {
     return NextResponse.redirect(new URL("/app", req.nextUrl.origin));
   }
 

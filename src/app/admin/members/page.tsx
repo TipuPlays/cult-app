@@ -1,19 +1,15 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { auth } from "@/auth";
 import { db } from "@/db";
 import { levels, members, users } from "@/db/schema";
+import { requireStaffPage } from "@/lib/admin-page";
+import { Permission } from "@/lib/rbac";
 
 export const metadata = { title: "Members" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminMembersPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-  if (session.user.role !== "admin" && session.user.role !== "staff") {
-    redirect("/app");
-  }
+  await requireStaffPage(Permission.MEMBERS_READ);
 
   const rows = await db
     .select({

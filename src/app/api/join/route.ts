@@ -10,6 +10,7 @@ import {
   requireIdempotencyKey,
   withIdempotency,
 } from "@/lib/idempotency";
+import { RATE, rateLimit, rateLimitedResponse } from "@/lib/rate-limit";
 
 const schema = z.object({
   email: z.string().email(),
@@ -19,6 +20,11 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
+  const rl = rateLimit({ key: `join:${ip}`, ...RATE.join });
+  if (!rl.ok) return rateLimitedResponse(rl.retryAfterSec);
+
   const key = requireIdempotencyKey(req);
   if (!key) return missingIdempotencyResponse();
 
