@@ -10,13 +10,18 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:seed": "tsx --env-file=.env src/db/seed.ts",
+    "db:push": "drizzle-kit push --force",
+    "db:seed": "tsx src/db/seed.ts",
     "db:setup": "pnpm db:push && pnpm db:seed"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "date-fns": "^4.4.0",
+    "dotenv": "^18.0.3",
+    "drizzle-kit": "^0.31.11",
     "drizzle-orm": "^0.45.3",
     "nanoid": "^6.0.1",
     "next": "16.3.6",
@@ -24,6 +29,7 @@
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "tsx": "^4.23.15",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -32,12 +38,9 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "dotenv": "^18.0.3",
-    "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "tailwindcss": "^4",
-    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.1"
   },

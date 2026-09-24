@@ -13,12 +13,15 @@ services:
     runtime: node
     plan: free
     region: oregon
+    # Seed uses process env (DATABASE_URL) — do NOT pass --env-file=.env (file absent on Render)
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm db:push && pnpm db:seed && pnpm build
     startCommand: pnpm start
     healthCheckPath: /
     envVars:
       - key: NODE_VERSION
         value: "22"
+      - key: NODE_ENV
+        value: production
       - key: PORT
         value: "10000"
       - key: DATABASE_URL
@@ -29,7 +32,12 @@ services:
         generateValue: true
       - key: AUTH_TRUST_HOST
         value: "true"
+      # Set after first deploy to https://<service>.onrender.com (or Render sync)
+      - key: AUTH_URL
+        sync: false
       - key: NEXTAUTH_URL
         sync: false
       - key: BLOB_STORAGE_DIR
         value: /opt/render/project/src/.data/blobs
+      - key: BLOB_STORAGE
+        value: memory
