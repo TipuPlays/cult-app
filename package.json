@@ -15,7 +15,7 @@
     "db:setup": "pnpm db:push && pnpm db:seed"
   },
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
